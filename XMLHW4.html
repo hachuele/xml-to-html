@@ -1,0 +1,293 @@
+<html>
+<head>
+<script>
+
+
+//Function to test for no newspapers in list
+    
+function newspapersMissing(xmlDoc)
+{
+    tableRows = xmlDoc.getElementsByTagName("Row");
+    if (tableRows.length == 0) 
+    {
+  	     alert("There are no newspapers listed.");
+         return true;
+    }
+}     
+
+
+
+function generateHTML(xmlDoc)
+{  
+    ELEMENT_NODE = 1;    // MS parser doesn't define Node.ELEMENT_NODE
+    root=xmlDoc.DocumentElement;
+    html_text="<html style='overflow-y:scroll'; height:900px'><head><title>XML Parse Result</title></head><body>";
+    html_text+="<table border='2'>";
+    
+    headers = xmlDoc.getElementsByTagName("Header");
+    newspapers = xmlDoc.getElementsByTagName("Row");
+    locations = xmlDoc.getElementsByTagName("Location");
+    
+    //Create the header
+    
+    html_text+= "<tr>"; //table row for header
+    x=150; y=150; //initialize height and width for logo images
+    
+    headersNodeList = headers.item(0).childNodes; //Get all Data elements
+    
+    for (i=0; i<headersNodeList.length; i++)
+    {
+        if (headersNodeList.item(i).nodeType==ELEMENT_NODE)
+        {
+            
+            //Check if null value for data element - return NA
+                    
+            if(headersNodeList.item(i).firstChild == null)
+            {
+                html_text+= "<td><b>NA</b></td>";
+            }
+                    
+            else
+            {
+            html_text+= "<th>"+headersNodeList.item(i).firstChild.nodeValue+"</th>";
+            }
+        }
+    }
+    html_text+= "</tr>"; // end of table row for header
+
+    //OUTPUT
+    
+    for (i=0; i<newspapers.length; i++)
+    {
+        newspapersNodeList = newspapers.item(i).childNodes; // Get properties of newspaper
+        html_text+= "<tr>";
+        
+        for(j=0; j<newspapersNodeList.length; j++)
+        {
+            if (newspapersNodeList.item(j).nodeType==ELEMENT_NODE)
+            {
+                if(newspapersNodeList.item(j).nodeName=="Logo")
+                {
+                    
+                    //Check if null value for data element - return NA
+                    
+                    if(newspapersNodeList.item(j).firstChild == null)
+                    {
+                        html_text+= "<td>NA</td>";
+                    }
+                    
+                    else
+                    {
+                    html_text+= "<td><img src='"+newspapersNodeList.item(j).firstChild.nodeValue+"' width='"+x+"' height='"+y+"'></td>";
+                    }
+                }
+                
+                else if (newspapersNodeList.item(j).nodeName=="HomePage")
+                {
+                    
+                    //Check if null value for data element - return NA
+                    
+                    if(newspapersNodeList.item(j).firstChild == null)
+                    {
+                        html_text+= "<td>NA</td>";
+                    }
+                    
+                    else
+                    {
+                    html_text+= "<td><a href='"+newspapersNodeList.item(j).firstChild.nodeValue+"'>"+newspapersNodeList.item(j).firstChild.nodeValue+"</a></td>";
+                    }
+                    
+                }
+                
+                else if (newspapersNodeList.item(j).nodeName=="Location")
+                {
+                    html_text+= "<td><ul>";
+                    locationsNodeList= locations.item(i).childNodes;
+                    
+                    for(k=0; k<locationsNodeList.length; k++)
+                    {
+                         if(locationsNodeList.item(k).nodeType==ELEMENT_NODE)
+                        {
+                            if(!locationsNodeList.item(k).hasChildNodes())
+                            {   
+                            html_text+= "<li>N.A</li>";                                
+                            }
+                            
+                            else
+                            {
+                            html_text+= "<li>"+locationsNodeList.item(k).firstChild.nodeValue+"</li>";    
+                            } 
+                        }                       
+                        
+                    }
+                        html_text+= "</ul></td>";
+                }
+                    
+                else if (newspapersNodeList.item(j).nodeName=="Slot")
+                    {
+                        
+                        //Check if null value for data element - return NA
+                    
+                        if(newspapersNodeList.item(j).firstChild == null)
+                        {
+                            html_text+= "<td>NA</td>";
+                        }
+                    
+                        else
+                        {
+                            html_text+="<td>"+newspapersNodeList.item(j).firstChild.nodeValue+"</td>";
+                        }
+                    }
+                
+                else if (newspapersNodeList.item(j).nodeName=="Newspaper")
+                    {
+                        
+                        //Check if null value for data element - return NA
+                    
+                        if(newspapersNodeList.item(j).firstChild == null)
+                        {
+                            html_text+= "<td>NA</td>";
+                        }
+                    
+                        else
+                        {
+                            html_text+="<td>"+newspapersNodeList.item(j).firstChild.nodeValue+"</td>";
+                        } 
+                    }
+            }
+            
+        }
+    html_text+= "</tr>";
+    }
+    
+
+}
+
+    
+function viewXML(what)
+{
+    var URL = what.URL.value;
+    
+    function loadXML(url) 
+    {
+      if (window.XMLHttpRequest)
+      {// code for IE7+, Firefox, Chrome, Opera, Safari
+       xmlhttp=new XMLHttpRequest();
+      }
+        
+      else 
+      {// code for IE6, IE5
+          xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");  
+      }
+    
+
+      xmlhttp.open("GET",url,false);
+      xmlhttp.send()  
+      
+      //CHECK IF FILE EXISTS 
+      
+      if(xmlhttp.status == 404)
+        {
+            alert('File not found');
+        }
+      
+      
+      xmlDoc=xmlhttp.responseXML;
+      return xmlDoc;   
+        
+    }
+    
+    xmlDoc = loadXML(URL);
+    
+    if (window.ActiveXObject) //if IE, simply execute script (due to async prop).
+    {  
+        if (xmlDoc.parseError.errorCode != 0) 
+        {
+            var myErr = xmlDoc.parseError;
+            generateError(xmlDoc);
+            hWin = window.open("", "Error", "height=300,width=340");
+            hWin.document.write(html_text);
+        } 
+        
+        else 
+        {  
+            generateHTML(xmlDoc);
+            hWin = window.open("", "Assignment4", "height=800,width=900");
+            hWin.document.write(html_text);   }
+    } 
+    
+    else //else if FF, execute script once XML object has loaded
+    {
+        
+        //CHECK FOR PARSING ERROR/ EMPTY SEARCH BAR 
+        
+        var empty = document.forms["myForm"]["URL"].value;
+    
+        if(empty == null || empty== "")
+        {
+            alert("Please input the URL of a valid XML");
+            return false;
+        }
+        
+
+            var errorMsg = null;
+            if (xmlDoc.parseError && xmlDoc.parseError.errorCode != 0) 
+            {
+                errorMsg = "XML Parsing Error!";
+            }
+            else 
+            {
+                if (xmlDoc.documentElement) 
+                {
+                    if (xmlDoc.documentElement.nodeName == "parsererror") 
+                    {
+                        errorMsg = "Error Parsing XML File.";
+                    }
+                }
+                else 
+                {
+                    errorMsg = "XML Parsing Error!";
+                }
+            }
+
+            if (errorMsg) 
+            {
+                alert (errorMsg);
+            }
+
+        
+            xmlDoc.onload=generateHTML(xmlDoc);
+        
+        
+            //Check if newspapers in list
+        
+            if (newspapersMissing(xmlDoc))
+            {
+	           return;
+            }
+            else
+            {
+        
+            hWin = window.open("", "Assignment4", "height=800,width=900,scrollbars=yes");
+            hWin.document.write(html_text); 
+            }
+ 
+    }
+        
+    hWin.document.close();  
+}
+ 
+ </script>
+ </head>
+    
+    
+<body style="max-width: 750px; min-width: 750px; margin: 0 auto; content-align:center; overflow:scroll">
+<h1>Enter URL for Newspaper List XML File</h1>
+
+<form name="myForm" method="POST" id="location">
+<input type="text" name="URL" maxlength="255" size="35" value="newslist.xml" style="border-color:blue; margin-left:160px" />
+<br />
+<input style="margin-left:220px; margin-top:15px" type="submit" name="submit" value="Submit Query" onClick="viewXML(this.form)"/>
+</form>
+</body>
+</html>
